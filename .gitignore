@@ -339,3 +339,7 @@ tags
 .renku.lock
 .renku/tmp
 .renku/cache
+
+# ZHAW Exercises
+wandb/
+data/
