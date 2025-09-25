@@ -14,8 +14,8 @@ import torchvision
 from torchinfo import summary
 from torcheval.metrics import MulticlassAccuracy
 
+import wandb
 import numpy as np
-
 
 def get_data_set(batch_size):
     #
@@ -44,19 +44,43 @@ def get_data_set(batch_size):
 class DeepCNN(nn.Module):
     def __init__(self):
         super(DeepCNN, self).__init__()
-        # to complete
+
+        self.layers = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=6, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=6, out_channels=12, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=12, out_channels=36, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=36, out_channels=64, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=64, out_channels=96, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(in_channels=96, out_channels=128, kernel_size=3),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+            nn.Linear(512, 37),
+        )
 
     def forward(self, x):
-        # to complete
-
-        return x
+        return self.layers(x)
 
 #
 # This version does not use wandb, but tensorboard or wandb are recommended
 #
 def train(model, train_loader, val_loader, criterion, optimizer, num_epochs, device):
+    wandb.init(project="advdelearn-OxfordIIITPet", config={'epochs': num_epochs, 'batch_size': train_loader.batch_size})
     metrics = MulticlassAccuracy(num_classes=37)
+
     total_step = len(train_loader)
+    wandb_step = 1
+
     for epoch in range(num_epochs):
         model.train()
         metrics.reset()
@@ -74,6 +98,13 @@ def train(model, train_loader, val_loader, criterion, optimizer, num_epochs, dev
             metrics.update(predicted, labels)
             train_acc = metrics.compute()
 
+            train_metrics = {'train/train_loss:': loss,
+                             'train/train_acc': train_acc,
+                             'train/epoch': epoch}
+
+            wandb_step += 1
+            wandb.log(train_metrics, wandb_step)
+
             if (step+1) % 10 == 0:
                 print (f'Epoch [{epoch+1}/{num_epochs}], '
                        f'Step [{step+1}/{total_step}], '
@@ -82,13 +113,20 @@ def train(model, train_loader, val_loader, criterion, optimizer, num_epochs, dev
         model.eval()
         with torch.no_grad():
             metrics.reset()
-            for images, labels in val_loader:
+            for step, (images, labels) in enumerate(val_loader):
                 images = images.to(device)
                 labels = labels.to(device)
                 outputs = model(images)
+                loss = criterion(outputs, labels)
                 _, predicted = torch.max(outputs.data, 1)
                 metrics.update(predicted, labels)
-            val_acc = metrics.compute()
+
+                val_acc = metrics.compute()
+                val_metrics = {'val/val_loss': loss,
+                               'val/val_acc': val_acc}
+
+                wandb_step += 1
+                wandb.log(val_metrics, wandb_step)
 
             print(f'Val Accuracy: {val_acc: .2f}')
 
@@ -98,24 +136,41 @@ def get_device():
     if torch.cuda.is_available():
         device = torch.device('cuda')
         # test if it worked
-        x = torch.ones(1, device=device)
+        _ = torch.ones(1, device=device)
         print('Using CUDA device')
 
     elif torch.backends.mps.is_available():
         device = torch.device('mps')
-        x = torch.ones(1, device=device)
+        _ = torch.ones(1, device=device)
         print('Using MPS device')
     else:
         print('Using CPU')
         device = torch.device('cpu')
     return device
 
+def get_input_size(data_loader: torch.utils.data.DataLoader) -> tuple:
+    return tuple(next(iter(data_loader))[0].shape)
+
 def main():
     batch_size = 64
-    train_loader, val_loader, test_loader = get_data_set(batch_size)
-    # to complete
+    device = get_device()
 
+    train_loader, val_loader, test_loader = get_data_set(batch_size)
+
+    input_size = get_input_size(train_loader)
+    print(f"Input size: {input_size}")
+
+    model = DeepCNN()
+    summary(model, input_size)
+    model.to(device)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    num_epochs = 50
+
+    train(model, train_loader, val_loader, criterion, optimizer, num_epochs, device)
 
 
 if __name__ == '__main__':
+    wandb.login()
     main()
