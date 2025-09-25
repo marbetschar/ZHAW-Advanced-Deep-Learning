@@ -52,20 +52,32 @@ class DeepCNN(nn.Module):
             nn.Conv2d(in_channels=6, out_channels=12, kernel_size=3),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(in_channels=12, out_channels=36, kernel_size=3),
+            # nn.Conv2d(in_channels=12, out_channels=36, kernel_size=3),
+            # nn.ReLU(),
+            # nn.MaxPool2d(2),
+            nn.Conv2d(12, 12, 3, groups=12),
+            nn.Conv2d(12, 36, 1),
             nn.ReLU(),
             nn.MaxPool2d(2),
-            nn.Conv2d(in_channels=36, out_channels=64, kernel_size=3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(in_channels=64, out_channels=96, kernel_size=3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(in_channels=96, out_channels=128, kernel_size=3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
+            # nn.Conv2d(in_channels=36, out_channels=64, kernel_size=3),
+            # nn.ReLU(),
+            # nn.MaxPool2d(2),
+            # nn.Conv2d(in_channels=64, out_channels=96, kernel_size=3),
+            # nn.ReLU(),
+            # nn.MaxPool2d(2),
+            # nn.Conv2d(in_channels=96, out_channels=128, kernel_size=3),
+            # nn.ReLU(),
+            # nn.MaxPool2d(2),
             nn.Flatten(),
-            nn.Linear(512, 37),
+            nn.Linear(32400, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(1024, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(128, 37)
         )
 
     def forward(self, x):
@@ -165,8 +177,9 @@ def main():
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    num_epochs = 50
+    # optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.RMSprop(model.parameters(), lr=0.001)
+    num_epochs = 1000
 
     train(model, train_loader, val_loader, criterion, optimizer, num_epochs, device)
 
