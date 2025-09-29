@@ -343,3 +343,4 @@ tags
 # ZHAW Exercises
 wandb/
 data/
+lstm.pt
