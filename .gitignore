@@ -343,4 +343,5 @@ tags
 # ZHAW Exercises
 wandb/
 data/
+.vector_cache/
 lstm.pt
