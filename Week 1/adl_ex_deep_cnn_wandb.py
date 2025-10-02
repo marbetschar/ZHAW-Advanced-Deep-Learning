@@ -23,8 +23,8 @@ def get_data_set(batch_size):
             [torchvision.transforms.ToTensor(),
              torchvision.transforms.CenterCrop(256)])
     transform_augment = torchvision.transforms.Compose(
-            [torchvision.transforms.ToTensor(),
-             torchvision.transforms.AutoAugment(),
+            [torchvision.transforms.AutoAugment(),
+             torchvision.transforms.ToTensor(),
              torchvision.transforms.CenterCrop(256)])
     data_train = torchvision.datasets.OxfordIIITPet(root='data/OxfordIIITPet', download=True, transform=transform_augment)
     data_val = torchvision.datasets.OxfordIIITPet(root='data/OxfordIIITPet', download=True, transform=transform)
