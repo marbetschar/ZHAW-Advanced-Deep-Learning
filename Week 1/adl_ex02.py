@@ -15,7 +15,6 @@ from torchinfo import summary
 from torcheval.metrics import MulticlassAccuracy
 
 import wandb
-import numpy as np
 
 def get_data_set(batch_size):
     #
@@ -47,37 +46,63 @@ class DeepCNN(nn.Module):
 
         self.layers = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=6, kernel_size=3),
+            nn.BatchNorm2d(6),
             nn.ReLU(),
-            nn.MaxPool2d(2),
             nn.Conv2d(in_channels=6, out_channels=12, kernel_size=3),
+            nn.BatchNorm2d(12),
             nn.ReLU(),
+            nn.Conv2d(in_channels=12, out_channels=24, kernel_size=3),
             nn.MaxPool2d(2),
-            # nn.Conv2d(in_channels=12, out_channels=36, kernel_size=3),
-            # nn.ReLU(),
-            # nn.MaxPool2d(2),
-            nn.Conv2d(12, 12, 3, groups=12),
-            nn.Conv2d(12, 36, 1),
+            nn.BatchNorm2d(24),
             nn.ReLU(),
+            #
+            nn.Conv2d(in_channels=24, out_channels=48, kernel_size=3),
+            nn.BatchNorm2d(48),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=48, out_channels=96, kernel_size=3),
+            nn.BatchNorm2d(96),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=96, out_channels=128, kernel_size=3),
             nn.MaxPool2d(2),
-            # nn.Conv2d(in_channels=36, out_channels=64, kernel_size=3),
-            # nn.ReLU(),
-            # nn.MaxPool2d(2),
-            # nn.Conv2d(in_channels=64, out_channels=96, kernel_size=3),
-            # nn.ReLU(),
-            # nn.MaxPool2d(2),
-            # nn.Conv2d(in_channels=96, out_channels=128, kernel_size=3),
-            # nn.ReLU(),
-            # nn.MaxPool2d(2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            #
+            nn.Conv2d(in_channels=128, out_channels=192, kernel_size=3),
+            nn.BatchNorm2d(192),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=192, out_channels=256, kernel_size=3),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3),
+            nn.MaxPool2d(2),
+            nn.BatchNorm2d(384),
+            nn.ReLU(),
+            #
+            nn.Conv2d(in_channels=384, out_channels=512, kernel_size=3),
+            nn.MaxPool2d(2),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=512, out_channels=640, kernel_size=3),
+            nn.MaxPool2d(2),
+            nn.BatchNorm2d(640),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=640, out_channels=768, kernel_size=3),
+            nn.MaxPool2d(2),
+            nn.BatchNorm2d(768),
+            nn.ReLU(),
+            #
             nn.Flatten(),
-            nn.Linear(32400, 1024),
-            nn.BatchNorm1d(1024),
+            nn.Linear(768, 512),
+            nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(1024, 128),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.BatchNorm1d(128),
             nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(128, 37)
+            nn.Linear(128, 37),
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
