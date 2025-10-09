@@ -346,3 +346,4 @@ data/
 .vector_cache/
 lstm.pt
 *.pth
+figures/
